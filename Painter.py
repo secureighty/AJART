@@ -4,7 +4,6 @@ import pyautogui
 import keyboard
 from PIL import Image
 from math import floor
-import tkinter
 
 
 def select_color(color):
@@ -30,10 +29,11 @@ def select_color(color):
     pyautogui.click(1108, 60)
     time.sleep(1)
 
+
 def select_size(size):
     pyautogui.click(53, 516)
     time.sleep(1)
-    if size <= 2:
+    if size <= 5:
         pyautogui.click(247, 660)
     elif size <= 10:
         pyautogui.click(420, 660)
@@ -88,8 +88,9 @@ def click(xloc, yloc, speed):
 
 
 class Painter:
-    def __init__(self, filename, mode, scaledivisor, speed=True):
+    def __init__(self, filename, mode, scaledivisor, speed, cd):
         self.speed = speed
+        self.cd = cd
         self.done = False
         self.filename = filename
         self.mode = mode
@@ -107,14 +108,10 @@ class Painter:
         self.img.show()
         keyboard.add_hotkey("[", self.drawpic)
 
-    def drawpic(self, colorrange=20):
+    def drawpic(self):
         pyautogui.click(71, 414)
         time.sleep(1)
         pyautogui.click(412, 216)
-        time.sleep(1)
-        pyautogui.click(39, 883)
-        time.sleep(1)
-        pyautogui.click(1140, 643)
         time.sleep(1)
         select_size(self.scaledivisor)
 
@@ -148,7 +145,7 @@ class Painter:
                         pixel = px[counter]
                     else:
                         pixel = 256 - px
-                    pixmult = floor(pixel * colorrange / 256)
+                    pixmult = floor(pixel * self.cd / 256)
 
                     for i in range(pixmult):
                         click(xloc, yloc, self.speed)
@@ -156,4 +153,3 @@ class Painter:
                         stop = True
             counter += 1
         self.done = True
-
