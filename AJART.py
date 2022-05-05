@@ -20,20 +20,20 @@ class AJArt_Gui:
         self.scaling_factor = IntVar(self.win, 10)
         self.cd = IntVar(self.win, 20)
         self.p = None
-        topframe = Frame(self.win, relief=RAISED)
-        topframe.pack(fill="both", expand=True)
+        self.topframe = Frame(self.win, relief=RAISED)
+        self.topframe.pack(fill="both", expand=True)
         pad = 50
-        topframe.grid_rowconfigure(1, weight=1, pad=pad)
-        topframe.grid_columnconfigure(1, weight=1, pad=pad)
-        topframe.grid_rowconfigure(0, weight=1, pad=pad)
-        topframe.grid_columnconfigure(0, weight=1, pad=pad)
+        self.topframe.grid_rowconfigure(1, weight=1, pad=pad)
+        self.topframe.grid_columnconfigure(1, weight=1, pad=pad)
+        self.topframe.grid_rowconfigure(0, weight=1, pad=pad)
+        self.topframe.grid_columnconfigure(0, weight=1, pad=pad)
 
         ###SELECT IMAGE BUTTON###
-        select_image_button = Button(topframe, text="Select Image", width=20, height=5, command=self.select_image)
+        select_image_button = Button(self.topframe, text="Select Image", width=20, height=5, command=self.select_image)
         select_image_button.grid(row=0, column=0)
 
         ###MODE SELECT###
-        modes_frame = Frame(topframe)
+        modes_frame = Frame(self.topframe)
         select_mode_message = Message(modes_frame, text="------Select Mode------", width=300)
         select_mode_message.pack()
         mode_dict = {"CMYK": "CMYK", "L": "Grayscale"}
@@ -42,7 +42,7 @@ class AJArt_Gui:
         modes_frame.grid(row=0, column=1)
 
         ###DOTSIZE SELECT###
-        ds_frame = Frame(topframe)
+        ds_frame = Frame(self.topframe)
         select_ds_message = Message(ds_frame, text="------Select Dot Size------", width=300)
         select_ds_message.pack()
         ds_dict = {5: "Tiny", 10: "Small", 20: "Medium", 30: "Large", 40: "Very Large", 60: "Gigantic"}
@@ -55,7 +55,7 @@ class AJArt_Gui:
         self.load_button.pack()
 
         ###SPEED SELECT###
-        speed_frame = Frame(topframe)
+        speed_frame = Frame(self.topframe)
         select_speed_message = Message(speed_frame, text="------Select Speed------", width=300)
         select_speed_message.pack()
         speed_dict = {True: "Fast", False: "Accurate (No Glitches)"}
@@ -64,7 +64,7 @@ class AJArt_Gui:
         speed_frame.grid(row=1, column=1)
 
         ###COLOR DEPTH SELECT###
-        cd_frame = Frame(topframe)
+        cd_frame = Frame(self.topframe)
         select_cd_message = Message(cd_frame, text="------Select Color Depth------", width=300)
         select_cd_message.pack()
         cd_dict = {20: "Standard", 25: "Deep"}
@@ -85,6 +85,7 @@ class AJArt_Gui:
 
     def load(self):
         if not self.file_path is None:
+            self.topframe.pack_forget()
             self.load_button.pack_forget()
             threading.Thread(target=self.loadthread, daemon=True).start()
         else:
