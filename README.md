@@ -1,4 +1,4 @@
-#IMPORTANT NOTICE
+# IMPORTANT NOTICE
 AJART is broken for the main version as there was a UI update. Feel free to PR or fork this project and re-reverse the UI.
  
 # Animal Jam Art Printer
