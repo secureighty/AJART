@@ -10,13 +10,13 @@ def select_color(color):
     pyautogui.click(53, 31)
     time.sleep(1)
     if color == "cyan":
-        pyautogui.click(457, 510)
+        pyautogui.click(198, 193)
     elif color == "magenta":
-        pyautogui.click(457, 820)
+        pyautogui.click(198, 286)
     elif color == "yellow":
-        pyautogui.click(457, 327)
+        pyautogui.click(198, 101)
     elif color == "key" or color == "black":
-        pyautogui.click(1000, 930)
+        pyautogui.click(131, 354)
     elif color == "red":
         pyautogui.click(457, 165)
     elif color == "blue":
@@ -33,18 +33,18 @@ def select_color(color):
 def select_size(size):
     pyautogui.click(53, 516)
     time.sleep(1)
-    if size <= 5:
-        pyautogui.click(247, 660)
-    elif size <= 10:
-        pyautogui.click(420, 660)
+    if size <= 3:
+        pyautogui.click(172, 866)
+    elif size <= 7:
+        pyautogui.click(265, 866)
+    elif size <= 13:
+        pyautogui.click(172, 917)
     elif size <= 20:
-        pyautogui.click(576, 660)
-    elif size <= 30:
-        pyautogui.click(751, 660)
+        pyautogui.click(265, 917)
     elif size <= 40:
-        pyautogui.click(929, 660)
+        pyautogui.click(172, 980)
     else:
-        pyautogui.click(1087, 660)
+        pyautogui.click(265, 980)
     time.sleep(1)
 
 
@@ -99,8 +99,8 @@ class Painter:
         self.img = self.img.convert(self.mode)
         if self.mode == "CMYK":
             self.img = gcr(self.img)
-        self.width = 1320
-        self.height = 1080
+        self.width = 1380
+        self.height = 850
         self.img = self.img.resize((self.width // self.scaledivisor, self.height // self.scaledivisor))
         self.pix = self.img.load()
         self.x, self.y = self.img.size
@@ -109,9 +109,7 @@ class Painter:
         keyboard.add_hotkey("[", self.drawpic)
 
     def drawpic(self):
-        pyautogui.click(71, 414)
-        time.sleep(1)
-        pyautogui.click(412, 216)
+        pyautogui.click(176, 699)
         time.sleep(1)
         select_size(self.scaledivisor)
 
@@ -137,8 +135,8 @@ class Painter:
                             pass
                         stop = False
                         print("unstopped")
-                    xloc = 360 + xval * self.width / self.x
-                    yloc = yval * self.height / self.y
+                    xloc = 350 + xval * self.width / self.x
+                    yloc = 110 + yval * self.height / self.y
                     px = self.pix[xval, yval]
                     print(px)
                     if type(px) != int:
