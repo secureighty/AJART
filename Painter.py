@@ -1,51 +1,82 @@
+import threading
 import time
 
 import pyautogui
 import keyboard
 from PIL import Image
-from math import floor
+import os
+
+
+def open_color_menu():
+    pyautogui.click(50, 54)
+    time.sleep(.5)
+
+
+def enter_rgb():
+    pyautogui.click(1024, 990)
+    time.sleep(.5)
+
+
+def close_color_menu():
+    pyautogui.click(1416, 74)
+    time.sleep(.5)
 
 
 def select_color(color):
-    pyautogui.click(53, 31)
-    time.sleep(1)
+    open_color_menu()
+    enter_rgb()
     if color == "cyan":
-        pyautogui.click(457, 510)
+        keyboard.write("00ffff")
     elif color == "magenta":
-        pyautogui.click(457, 820)
+        keyboard.write("ff00ff")
     elif color == "yellow":
-        pyautogui.click(457, 327)
+        keyboard.write("ffff00")
     elif color == "key" or color == "black":
-        pyautogui.click(1000, 930)
+        keyboard.write("000000")
     elif color == "red":
-        pyautogui.click(457, 165)
+        keyboard.write("ff0000")
     elif color == "blue":
-        pyautogui.click(457, 409)
+        keyboard.write("0000ff")
     elif color == "green":
-        pyautogui.click(457, 695)
+        keyboard.write("00ff00")
     else:
         raise ValueError(f"Value {color} not in colors")
-    time.sleep(1)
-    pyautogui.click(1108, 60)
-    time.sleep(1)
+    time.sleep(.5)
+    # # Select opacity = 20
+    # pyautogui.click(1133, 646)
+
+    # Select opacity = 2
+    pyautogui.click(1133, 732)
+    time.sleep(.5)
+
+    close_color_menu()
+
+
+def open_tools_menu():
+    pyautogui.click(52, 378)
+    time.sleep(.5)
+
+
+def select_brush():
+    pyautogui.click(411, 234)
+    time.sleep(.5)
+
+
+def select_small():
+    pyautogui.click(878, 999)
+    time.sleep(.5)
+
+
+def close_tools_menu():
+    pyautogui.click(860, 84)
+    time.sleep(.5)
 
 
 def select_size(size):
-    pyautogui.click(53, 516)
-    time.sleep(1)
-    if size <= 5:
-        pyautogui.click(247, 660)
-    elif size <= 10:
-        pyautogui.click(420, 660)
-    elif size <= 20:
-        pyautogui.click(576, 660)
-    elif size <= 30:
-        pyautogui.click(751, 660)
-    elif size <= 40:
-        pyautogui.click(929, 660)
-    else:
-        pyautogui.click(1087, 660)
-    time.sleep(1)
+    open_tools_menu()
+    select_brush()
+    select_small()
+    close_tools_menu()
 
 
 def gcr(im):
@@ -78,19 +109,10 @@ def getcolors(mode):
         return ["red", "green", "blue"]
 
 
-def click(xloc, yloc, speed):
-    if speed:
-        pyautogui.click(xloc, yloc)
-    else:
-        pyautogui.moveTo(xloc, yloc)
-        pyautogui.mouseDown()
-        pyautogui.mouseUp()
-
-
 class Painter:
-    def __init__(self, filename, mode, scaledivisor, speed, cd):
+    def __init__(self, filename, mode="CYMK", scaledivisor=20, speed=False, cd=5):
         self.speed = speed
-        self.cd = cd
+        self.cd = cd  # cd stands for color depth. The higher the number, the deeper the colors.
         self.done = False
         self.filename = filename
         self.mode = mode
@@ -99,57 +121,101 @@ class Painter:
         self.img = self.img.convert(self.mode)
         if self.mode == "CMYK":
             self.img = gcr(self.img)
+
+        # measured size of AJ art window
         self.width = 1320
         self.height = 1080
+
         self.img = self.img.resize((self.width // self.scaledivisor, self.height // self.scaledivisor))
-        self.pix = self.img.load()
+        # self.pixel_matrix = self.img.load()
+        self.pixel_matrix = {}
+        loaded_img = self.img.load()
         self.x, self.y = self.img.size
+        for x in range(self.x):
+            for y in range(self.y):
+                self.pixel_matrix[x, y] = list(loaded_img[x, y])
         print(self.x, self.y)
-        self.img.show()
-        keyboard.add_hotkey("[", self.drawpic)
+        self.drawpic()
 
     def drawpic(self):
-        pyautogui.click(71, 414)
-        time.sleep(1)
-        pyautogui.click(412, 216)
-        time.sleep(1)
+        # select the size. TODO: reexpand this
         select_size(self.scaledivisor)
 
-        keyboard.unhook_all_hotkeys()
+        # set up pause functionality
+        global stop
         stop = False
-        counter = 0
-        for color in getcolors(self.mode):
-            if stop:
-                while not keyboard.is_pressed("["):
-                    pass
-                stop = False
-                print("unstopped")
-            select_color(color)
-            for xval in range(self.x):
-                if stop:
-                    while not keyboard.is_pressed("["):
-                        pass
-                    stop = False
-                    print("unstopped")
-                for yval in range(self.y):
-                    if stop:
-                        while not keyboard.is_pressed("["):
-                            pass
-                        stop = False
-                        print("unstopped")
-                    xloc = 360 + xval * self.width / self.x
-                    yloc = yval * self.height / self.y
-                    px = self.pix[xval, yval]
-                    print(px)
-                    if type(px) != int:
-                        pixel = px[counter]
-                    else:
-                        pixel = 256 - px
-                    pixmult = floor(pixel * self.cd / 256)
 
-                    for i in range(pixmult):
-                        click(xloc, yloc, self.speed)
-                    if keyboard.is_pressed("]"):
-                        stop = True
-            counter += 1
-        self.done = True
+        def stoppainter():
+            global stop
+            stop = True
+
+        def startpainter():
+            global stop
+            stop = False
+
+        keyboard.add_hotkey("]", stoppainter)
+        keyboard.add_hotkey("[", startpainter)
+        threading.Thread(target=keyboard.wait).start()
+
+        '''
+        alternate colors, subtracting 1 for each click until all pixel values are (0,0,0,0)
+        '''
+
+        # run until all color values are 0
+        all_vals_are_0 = False
+        while not all_vals_are_0:
+            # hypothesize that this is the last run
+            all_vals_are_0 = True
+            # for each available color:
+            for color, color_index_in_tuple in zip(getcolors(self.mode), range(len(getcolors(self.mode)))):
+                select_color(color)
+
+                # for every pixel
+                for xval in range(self.x):
+                    acted_this_y = False
+                    drag_buffer_start_x = -1
+                    drag_buffer_start_y = -1  # -1 if unused, positive otherwise
+                    drag_buffer_size = 0
+                    for yval in range(self.y):
+                        pixel = self.pixel_matrix[xval, yval]
+                        pixel_color_value = pixel[color_index_in_tuple]
+                        if pixel_color_value > 0:
+                            # get the pixel location
+                            xloc = 360 + xval * self.width / self.x
+                            yloc = yval * self.height / self.y
+
+                            drag_buffer_size += self.height / self.y
+                            if drag_buffer_start_y < 0:
+                                drag_buffer_start_y = yloc
+                                drag_buffer_start_x = xloc
+
+                            self.pixel_matrix[xval, yval][color_index_in_tuple] -= max(int(256 / self.cd), 1)
+
+                            # this never runs if everything is always 0
+                            all_vals_are_0 = False
+                            acted_this_y = True
+                            while stop:
+                                pass
+                        elif drag_buffer_size > 0:
+                            time.sleep(0.25)
+                            pyautogui.moveTo(drag_buffer_start_x, drag_buffer_start_y)
+                            pyautogui.mouseDown()
+                            pyautogui.moveTo(drag_buffer_start_x, drag_buffer_start_y + drag_buffer_size)
+                            pyautogui.mouseUp()
+                            drag_buffer_start_y = -1
+                            drag_buffer_size = 0
+                            drag_buffer_start_x = -1
+                            time.sleep(0.25)
+
+                    # last drag check
+                    if drag_buffer_size > 0:
+                        time.sleep(0.25)
+                        pyautogui.moveTo(drag_buffer_start_x, drag_buffer_start_y)
+                        pyautogui.mouseDown()
+                        pyautogui.moveTo(drag_buffer_start_x, drag_buffer_start_y + drag_buffer_size)
+                        pyautogui.mouseUp()
+                        time.sleep(0.25)
+
+        os.system("start https://ko-fi.com/ajart_printer")
+        exit(1)
+

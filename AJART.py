@@ -1,12 +1,42 @@
-import time
 import tkinter
 import tkinter.messagebox
 import tkinter.font
 from tkinter import *
 from tkinter import filedialog
+
+import win32con
+
 import Painter
-import webbrowser
 import threading
+
+import win32gui
+import re
+
+
+class WindowMgr:
+    """Encapsulates some calls to the winapi for window management"""
+
+    def __init__(self):
+        """Constructor"""
+        self._handle = None
+
+    def find_window(self, class_name, window_name=None):
+        """find a window by its class_name"""
+        self._handle = win32gui.FindWindow(class_name, window_name)
+
+    def _window_enum_callback(self, hwnd, wildcard):
+        """Pass to win32gui.EnumWindows() to check all the opened windows"""
+        if re.match(wildcard, str(win32gui.GetWindowText(hwnd))) is not None:
+            self._handle = hwnd
+
+    def find_window_wildcard(self, wildcard):
+        """find a window whose title matches the wildcard regex"""
+        self._handle = None
+        win32gui.EnumWindows(self._window_enum_callback, wildcard)
+
+    def set_foreground(self):
+        """put the window in the foreground"""
+        win32gui.SetForegroundWindow(self._handle)
 
 
 class AJArt_Gui:
@@ -32,49 +62,13 @@ class AJArt_Gui:
         select_image_button = Button(self.topframe, text="Select Image", width=20, height=5, command=self.select_image)
         select_image_button.grid(row=0, column=0)
 
-        ###MODE SELECT###
-        modes_frame = Frame(self.topframe)
-        select_mode_message = Message(modes_frame, text="------Select Mode------", width=300)
-        select_mode_message.pack()
-        mode_dict = {"CMYK": "CMYK", "L": "Grayscale"}
-        for mode in mode_dict.keys():
-            Radiobutton(modes_frame, text=mode_dict[mode], value=mode, var=self.mode).pack()
-        modes_frame.grid(row=0, column=1)
-
-        ###DOTSIZE SELECT###
-        ds_frame = Frame(self.topframe)
-        select_ds_message = Message(ds_frame, text="------Select Dot Size------", width=300)
-        select_ds_message.pack()
-        ds_dict = {5: "Tiny", 10: "Small", 20: "Medium", 30: "Large", 40: "Very Large", 60: "Gigantic"}
-        for ds in ds_dict.keys():
-            Radiobutton(ds_frame, text=ds_dict[ds], value=ds, var=self.scaling_factor).pack()
-        ds_frame.grid(row=1, column=0)
-
         ###LOAD BUTTON###
-        self.load_button = Button(self.win, text="Load", width=20, height=5, command=self.load)
-        self.load_button.pack()
-
-        ###SPEED SELECT###
-        speed_frame = Frame(self.topframe)
-        select_speed_message = Message(speed_frame, text="------Select Speed------", width=300)
-        select_speed_message.pack()
-        speed_dict = {True: "Fast", False: "Accurate (No Glitches)"}
-        for speed in speed_dict.keys():
-            Radiobutton(speed_frame, text=speed_dict[speed], value=speed, var=self.speed).pack()
-        speed_frame.grid(row=1, column=1)
-
-        ###COLOR DEPTH SELECT###
-        cd_frame = Frame(self.topframe)
-        select_cd_message = Message(cd_frame, text="------Select Color Depth------", width=300)
-        select_cd_message.pack()
-        cd_dict = {20: "Standard", 25: "Deep"}
-        for cd in cd_dict.keys():
-            Radiobutton(cd_frame, text=cd_dict[cd], value=cd, var=self.cd).pack()
-        cd_frame.grid(row=2, column=1)
+        self.load_button = Button(self.topframe, text="Start", width=20, height=5, command=self.load)
+        self.load_button.grid(row=0, column=1)
 
         ###BOTTOM MESSAGE###
         my_font = tkinter.font.Font(size=18)
-        controls_message = Message(self.win, text="Once Loaded, Press '[' to start, and ']' to pause",
+        controls_message = Message(self.win, text="While running,\npress '[' to start,\nand ']' to pause",
                                    width=550, font=my_font)
         controls_message.pack(fill="both", expand=True)
 
@@ -84,27 +78,20 @@ class AJArt_Gui:
         self.file_path = filedialog.askopenfilename()
 
     def load(self):
-        if not self.file_path is None:
+        if self.file_path is not None:
             self.topframe.pack_forget()
             self.load_button.pack_forget()
+            w = WindowMgr()
+            w.find_window_wildcard("Animal Jam")
+            w.set_foreground()
             threading.Thread(target=self.loadthread, daemon=True).start()
         else:
             tkinter.messagebox.showerror("Error", "No Image Selected.")
 
     def loadthread(self):
-        self.p = Painter.Painter(self.file_path, self.mode.get(), self.scaling_factor.get(), self.speed.get(),
-                                 self.cd.get())
-        threading.Thread(target=self.thanks, daemon=True).start()
-
-    def thanks(self):
-        while self.p.done is False:
-            time.sleep(1)
-        result = tkinter.messagebox.askquestion("Thank you",
-                                                "Thanks for using AJART Printer! Was your print worth supporting me "
-                                                "for 5$?")
-        if result == "yes":
-            webbrowser.open("https://paypal.me/AedanETaylor")
-        exit(0)
+        thiswindow = win32gui.FindWindow(None, "Animal Jam Art Printer")
+        win32gui.SetWindowPos(thiswindow, win32con.HWND_TOPMOST, 1680, 0, 240, 240, 0)
+        self.p = Painter.Painter(self.file_path, self.mode.get(), self.scaling_factor.get())
 
 
 if __name__ == "__main__":
